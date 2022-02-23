@@ -9,9 +9,14 @@ exports.user_signup = async(req, res) => {
     try{
         // validate user input 
         let errors = validationResult(req);
-        console.log(req.body);
+        let returnedErrors = [];
+        console.log(errors);
         if(!errors.isEmpty()){
-            return res.status(422).json(errors.array());
+            for(error of errors.array()){
+                returnedErrors.push(error.msg);
+            }
+            
+            return res.status(422).json(returnedErrors);
         }
 
         // get the user's input
