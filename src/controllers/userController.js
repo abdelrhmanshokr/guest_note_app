@@ -29,7 +29,7 @@ exports.user_signup = async(req, res) => {
 
         // get the user's input
         let {username, email, password} = req.body; 
-        let filePath = __dirname + req.file.path;
+        let filePath = req.file ? __dirname + req.file.path : false;
 
         // create a sql connection pool 
         let pool = await sql.connect(databaseConfig);
@@ -41,7 +41,10 @@ exports.user_signup = async(req, res) => {
             // then this email wasn't used before so the user can use it
             let hashedPassword = await bcrypt.hash(password, 10);
             // add the new user with their hashed password to the database 
-            await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password, user_profile_picture) VALUES('" + username + "','" +  email + "','" + hashedPassword + "','" + filePath + "' );");
+            if(filePath){
+                await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password, user_profile_picture) VALUES('" + username + "','" +  email + "','" + hashedPassword + "','" + filePath + "' );");
+            }
+            await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password) VALUES('" + username + "','" +  email + "','" + hashedPassword + "' );");
             // close the connection pool 
             await pool.close();
 
