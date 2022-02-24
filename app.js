@@ -6,6 +6,8 @@ const userRouter = require('./src/routes/userRouter');
 
 const app = express();
 
+// for multer to save static content in static dir
+app.use('/static', express.static('./static'));
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
