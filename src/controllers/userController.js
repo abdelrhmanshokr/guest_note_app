@@ -43,6 +43,9 @@ exports.user_signup = async(req, res) => {
             // add the new user with their hashed password to the database 
             if(filePath){
                 await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password, user_profile_picture) VALUES('" + username + "','" +  email + "','" + hashedPassword + "','" + filePath + "' );");
+                
+                // then return user was created !
+                return res.status(201).json('User created successfully');
             }
             await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password) VALUES('" + username + "','" +  email + "','" + hashedPassword + "' );");
             // close the connection pool 
