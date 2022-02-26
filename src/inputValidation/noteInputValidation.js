@@ -9,5 +9,10 @@ exports.validate = (method) => {
                 body('receiverId', 'receiver Id is required, Please complete all required fields').trim().not().isEmpty()
             ]
         }
+        case 'soft_delete_a_note': {
+            return [
+                body('noteId', 'Note Id is required, Please complete all required fields').trim().isInt().not().isEmpty()
+            ]
+        }
     };
 };

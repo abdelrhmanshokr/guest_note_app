@@ -2,6 +2,7 @@ const sql = require('mssql');
 const { validationResult } = require('express-validator');
 
 const databaseConfig = require('../db/dbConfig');
+const { database } = require('../db/dbConfig');
 
 // function to validate user's input 
 function validateNoteInput(req){
@@ -45,14 +46,54 @@ exports.send_new_note = async(req, res) => {
             await pool.request().query("INSERT INTO guest_note_schema.notes(note_title, note_content, media_files, senderId, receiverId) VALUES('" + note_title + "','" + note_content  + "','" + filePath + "','" + senderId + "','" + receiverId + "' );");
             // close the connection pool
             await pool.close();
-
+            // TODO push new notification to the receiver as the new note is sent
             return res.status(201).json('Note was send successfully');
         }
+        // TODO push new notification to the receiver as the new note is sent
         await pool.request().query("INSERT INTO guest_note_schema.notes(note_title, note_content, sender_id, receiver_id) VALUES('" + note_title + "','" + note_content  + "','" + senderId + "','" + receiverId + "' );");
         // close the connection pool 
         await pool.close();
         
         return res.status(201).json('Note was send successfully');
+    }catch(err){
+        return res.status(401).json(err.message);
+    }
+}
+
+exports.soft_delete_a_note = async(req, res) => {
+    // a user can only soft delete one of more of their notes 
+    // this function switches the stat of a note from soft deleted 1 to not 0
+    // and the other way as well 
+    try{
+        // first validate user input 
+        if(validateNoteInput(req)){
+            return res.status(422).json(validateNoteInput(req));
+        }
+        
+        // get the logged user's ID from the check auth middleware
+        let userId = req.user._id;
+        // get the note's to be soft deleted ID 
+        let noteId = req.body.noteId;
+        
+        // get all logged user's notes 
+        let pool = await sql.connect(databaseConfig);
+        let note = await pool.request().query("SELECT * FROM guest_note.guest_note_schema.notes WHERE senderId = '" + userId + "' AND note_id = '" + noteId + "';");
+        
+        // check if this note exists then the logged user is the owner of this note
+        // so we can switch its is_soft_deleted status
+        if(note.recordset[0]['']){
+            // then the note does not belong to this user or it's no longer available
+            // in both cases the logged user can't update it 
+            return res.status(404).json('Can not access this note, It may have been deleted');
+        }
+
+        // other wise the note belongs to the logged user then 
+        // we can update its is_soft_deleted status
+        let updated_is_soft_deleted = !note.recordset[0].is_soft_deleted;
+        await pool.request().query("UPDATE guest_note.guest_note_schema.notes SET is_soft_deleted = '" + updated_is_soft_deleted + "' WHERE senderId = '" + userId + "' AND note_id = '" + noteId + "';");
+        await pool.close();
+
+        return res.status(200).json('Note update successfully');
     }catch(err){
         return res.status(401).json(err.message);
     }
