@@ -8,16 +8,11 @@ const databaseConfig = require('../db/dbConfig');
 // function to validate user input 
 function validateUserInput(req){
     let errors = validationResult(req);
-        let returnedErrors = [];
+    let returnedErrors = errors.array().map(error => error.msg);
 
-        if(!errors.isEmpty()){
-            // TODO do the same function here with errors.map if possible
-            for(error of errors.array()){
-                returnedErrors.push(error.msg);
-            }
-            
-            return returnedErrors;
-        }
+    if(!errors.isEmpty()){
+        return returnedErrors;
+    }
 }
 
 exports.user_signup = async(req, res) => {
@@ -43,8 +38,9 @@ exports.user_signup = async(req, res) => {
             // add the new user with their hashed password to the database 
             if(filePath){
                 await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password, user_profile_picture) VALUES('" + username + "','" +  email + "','" + hashedPassword + "','" + filePath + "' );");
-                
-                // then return user was created !
+                // close the connection pool
+                await pool.close();
+
                 return res.status(201).json('User created successfully');
             }
             await pool.request().query("INSERT INTO guest_note_schema.users(username, email, user_password) VALUES('" + username + "','" +  email + "','" + hashedPassword + "' );");

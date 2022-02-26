@@ -1,11 +1,11 @@
-// using multer to upload user profile picture
-// multer stores files locally and a path refering to them will be stored in the database
+// using multer to upload media files in notes 
+// multer stores media files locally and a path refering to them will be stored in the database
 const multer = require('multer');
 
 // define the dafault file location to save uploaded media files
 const multerStorage = multer.diskStorage({
     destination: function(req, file, cb){
-        cb(null, './static/profile_pictures'); 
+        cb(null, './static/media_files'); 
     },
     filename: function(req, file, cb){
         const fileNameParts = file.mimetype.split('/');
@@ -24,9 +24,9 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
-const upload_user_profile_picture = multer({
+const upload_media_files = multer({
     storage: multerStorage,
     fileFilter: fileFilter
 });
 
-module.exports = upload_user_profile_picture;
+module.exports = upload_media_files;

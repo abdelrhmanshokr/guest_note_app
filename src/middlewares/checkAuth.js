@@ -11,7 +11,6 @@ module.exports = async(req, res, next) => {
         const pool = await sql.connect(databaseConfig);
         // check if the user exist or not 
         let user = await pool.request().query("SELECT ISNULL((SELECT 1 FROM guest_note.guest_note_schema.users WHERE user_id ='" + decodedToken._id + "'), 0);");
-        console.log(user)
         // close the connection pool 
         await pool.close();
 
