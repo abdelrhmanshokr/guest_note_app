@@ -46,6 +46,8 @@ exports.send_new_note = async(req, res) => {
             // close the connection pool
             await pool.close();
             // TODO push new notification to the receiver as the new note is sent
+            // it could be done by getting the receiver email and sending it using 
+            // a service like mailgun
             return res.status(201).json('Note was send successfully');
         }
         // TODO push new notification to the receiver as the new note is sent
@@ -127,12 +129,12 @@ exports.get_all_user_received_notes = async(req, res) => {
         let note_type_id = req.body.note_type_id || false;
     
         // getting the date to use as filter to get notes from 30 days 
-         
+
         // getting all user's sent notes 
         let pool = await sql.connect(databaseConfig);
         // check if there's a note type to filter with
         if(note_type_id){
-            let allUserReceivedNotes = await pool.request().query("SELECT * FROM guest_note.guest_note_schema.notes WHERE receiverId = '" + userId + "' AND note_typeId = '" + note_type_id + "';");
+            let allUserReceivedNotes = await pool.request().query("SELECT * FROM guest_note.guest_note_schema.notes WHERE created_at <= GETDATE() - 30 AND receiverId = '" + userId + "' AND note_typeId = '" + note_type_id + "';");
             // close the connection pool
             await pool.close();
 
@@ -144,7 +146,7 @@ exports.get_all_user_received_notes = async(req, res) => {
             return res.status(200).json(allUserReceivedNotes);
         }
         // other wise filter through all types 
-        let allUserReceivedNotes = await pool.request().query("SELECT * FROM guest_note.guest_note_schema.notes WHERE receiverId = '" + userId + "';");
+        let allUserReceivedNotes = await pool.request().query("SELECT * FROM guest_note.guest_note_schema.notes WHERE created_at <= GETDATE() - 30 AND receiverId = '" + userId + "';");
         // close the connection pool
         await pool.close();
 

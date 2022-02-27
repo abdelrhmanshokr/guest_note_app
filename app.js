@@ -4,6 +4,12 @@ require('dotenv').config();
 
 const userRouter = require('./src/routes/userRouter');
 const noteRouter = require('./src/routes/noteRouter');
+// import the daily notifications function from the user controller 
+const userController = require('./src/controllers/userController');
+
+// using setInterval to repeat the daily notifications every day 
+// as long as the server is up 
+setInterval(userController.daily_user_notifications, 1000 * 60 * 60 * 24);
 
 const app = express();
 

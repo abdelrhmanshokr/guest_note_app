@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 
 const databaseConfig = require('../db/dbConfig');
+const { database } = require('../db/dbConfig');
 
 // function to validate user input 
 function validateUserInput(req){
@@ -120,3 +121,29 @@ exports.switch_daily_notification = async(req, res) => {
 
     return res.status(200).json('User updated successfully');
 };
+
+// this function purpose is to notify all active users 
+// with their new messages on a daily basis 
+exports.daily_user_notifications = async(req, res) => {
+    let pool = await sql.connect(databaseConfig);
+    let usersAndNotes = await pool.request().query(`
+        SELECT u.email AS receiver, COUNT(*) AS total_number_of_notes, nt.note_type_name
+        FROM guest_note.guest_note_schema.users AS u
+        JOIN guest_note.guest_note_schema.notes AS n  
+        ON u.user_id = n.receiverId
+        JOIN guest_note.guest_note_schema.note_types AS nt
+        ON n.note_typeId = nt.note_type_id
+        WHERE 
+        u.daily_notify_me = 1 AND 
+        n.is_soft_deleted = 0 AND
+        n.created_at >= GETDATE() - 1
+        GROUP BY u.email, nt.note_type_name;    
+    `);
+    // close the connection pool 
+    await pool.close();
+
+    // you can check out the output it's exactly what we're looking for 
+    // here should be the logic to send each user their new notification
+    // it could be done by a service like mailgun or any free service  
+    console.log(usersAndNotes.recordset);
+}
