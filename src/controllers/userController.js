@@ -104,4 +104,19 @@ exports.user_login = async(req, res) => {
     }catch(err){
         return res.status(500).json(err.message);
     }
-}
+};
+
+exports.switch_daily_notification = async(req, res) => {
+    // get the logged user from the check auth middleware
+    let userId = req.user._id;
+
+    let pool = await sql.connect(databaseConfig);
+    let user = await pool.request().query("SELECT * FROM guest_note.guest_note_schema.users WHERE user_id = '" + userId + "';");
+    let updated_daily_notification = !user.recordset[0].daily_notify_me
+    
+    // update the daily_notify_me flag 
+    await pool.request().query("UPDATE guest_note.guest_note_schema.users SET daily_notify_me = '" + updated_daily_notification + "' WHERE user_id = '" + userId + "';");
+    await pool.close();
+
+    return res.status(200).json('User updated successfully');
+};
